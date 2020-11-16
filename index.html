@@ -64,6 +64,187 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-halo-文章-所有文章" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/11/15/halo-%E6%96%87%E7%AB%A0-%E6%89%80%E6%9C%89%E6%96%87%E7%AB%A0/" class="article-date">
+  <time datetime="2020-11-15T04:26:18.423Z" itemprop="datePublished">2020-11-15</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/11/15/halo-%E6%96%87%E7%AB%A0-%E6%89%80%E6%9C%89%E6%96%87%E7%AB%A0/">halo-文章-所有文章</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="首先可以看到该页面发了四个请求"><a href="#首先可以看到该页面发了四个请求" class="headerlink" title="首先可以看到该页面发了四个请求"></a><strong>首先可以看到该页面发了四个请求</strong></h3><p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116190822077.png" alt="image-20201116190822077"></p>
+<h4 id="1-先看这个分页查询文章的请求"><a href="#1-先看这个分页查询文章的请求" class="headerlink" title="1.先看这个分页查询文章的请求"></a>1.先看这个分页查询文章的请求</h4><p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116191146697.png" alt="image-20201116191146697"></p>
+<blockquote>
+<p>可以看到该请求每页查询10条记录，且按照topPriority倒序和createTime倒序排列</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116191559679.png" alt="image-20201116191559679"></p>
+<blockquote>
+<p>查出了分页信息之后进行了一步转换，没转换前如下</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116192434110.png" alt="image-20201116192434110"></p>
+<blockquote>
+<p>转换后</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116192513807.png" alt="image-20201116192513807"></p>
+<blockquote>
+<p>可以先观察一下页面上显示的信息</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116192325920.png" alt="image-20201116192325920"></p>
+<blockquote>
+<p>再对比一下转换前后 ，发现在转换前并没有评论数和分类,标签这些信息，在转换后就出现了这些信息，所以转换的目的就在于获取到评论数，分类，标签这些信息，那到底又是怎么进行转换的呢？可以追到service层去看一下。</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116193424900.png" alt="image-20201116193424900"></p>
+<blockquote>
+<p>可以看到进入了service层打的断点，首先获取分页信息当中的博客信息，利用service层的一个工具类获取这些博客的id，通过这些博客id去获取一个key为博客id且value为博客对应的标签list集合的map，还有一个key为博客id且value为博客所属分类集合的map。</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116194532286.png" alt="image-20201116194532286"></p>
+<blockquote>
+<p>最后把post转换为PostListVo，再把刚才那些获取到的标签，分类和评论数填充到PostListVo当中返回，到这里基本上就是分页查询请求大致的全部过程。</p>
+</blockquote>
+<h4 id="2-再看这个latest请求"><a href="#2-再看这个latest请求" class="headerlink" title="2.再看这个latest请求"></a>2.再看这个latest请求</h4><p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116195709744.png" alt="image-20201116195709744"></p>
+<blockquote>
+<p>可以看到进入了断点，status为AUDITING(审核状态)，top等于10，即查询博客的最近的10条处于审核状态的评论。</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116200347901.png" alt="image-20201116200347901"></p>
+<blockquote>
+<p>由于并没有处于审核状态的评论，所以content大小为0，可以先在数据库当中插入一条出于审核状态的评论来进行测试。</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116200630646.png" alt="image-20201116200630646"></p>
+<blockquote>
+<p>这次可以看到查出了刚才插入的一条处于审核状态的评论，然后下一步也是进行了一步转换，那来看一下具体是怎么转换的。</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116201054596.png" alt="image-20201116201054596"></p>
+<blockquote>
+<p>也是和刚才分页的类似，先查询出所有的博客id，然后通过这些id获取到一个key为博客id且value为博客的map，然后再讲博客评论对象postcomment转换为PostCommentWithPostVO（包含了博客评论信息和博客的一些基本信息（BasePostMinimalDTO)迷你O(∩_∩)O哈哈~），这就是大致的请求过程，不过这个请求感觉是没有必要的，因为页面上并没有涉及到最近处于审核状态评论的信息。</p>
+</blockquote>
+<h4 id="3-最后来看一下这个category请求"><a href="#3-最后来看一下这个category请求" class="headerlink" title="3.最后来看一下这个category请求"></a>3.最后来看一下这个category请求</h4><p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116203534204.png" alt="image-20201116203534204"></p>
+<blockquote>
+<p>这个more默认false，直接走下面的return，直接查询出所有的分类再进行转换，由于没有分类信息，所以现在查出来的应该是空，还是插入一条数据来进行测试是不是这样</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116203928948.png" alt="image-20201116203928948"></p>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116204553246.png" alt="image-20201116204553246"></p>
+<blockquote>
+<p>可以看到确实是多了一条数据而且页面上的分类目录也多了一个。然后将查出来的category转换成categorydto，这个转换就是一个简单的转换，就使用beanutils进行了一下拷贝而已</p>
+</blockquote>
+<p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20201116204118473.png" alt="image-20201116204118473"></p>
+<p><img src="E:%5CMyBlog%5Csource_posts%5Cimage-20201116204447582.png" alt="image-20201116204447582"></p>
+<blockquote>
+<p>这就是category请求的大致过程。</p>
+</blockquote>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/11/15/halo-%E6%96%87%E7%AB%A0-%E6%89%80%E6%9C%89%E6%96%87%E7%AB%A0/" data-id="ckhkjpwu30000ycvo0db0a5sp" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-spring的自动注入" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/08/19/spring%E7%9A%84%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%85%A5/" class="article-date">
+  <time datetime="2020-08-19T03:35:01.680Z" itemprop="datePublished">2020-08-19</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/08/19/spring%E7%9A%84%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%85%A5/">spring的自动注入</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="自动注入"><a href="#自动注入" class="headerlink" title="自动注入"></a>自动注入</h1><p><img src="C:%5CUsers%5C86134%5CAppData%5CRoaming%5CTypora%5Ctypora-user-images%5Cimage-20200819113659991.png" alt="image-20200819113659991"></p>
+<h2 id="1-AUTOWIRE-BY-NAME和AUTOWIRE-BY-TYPE"><a href="#1-AUTOWIRE-BY-NAME和AUTOWIRE-BY-TYPE" class="headerlink" title="1.AUTOWIRE_BY_NAME和AUTOWIRE_BY_TYPE"></a>1.AUTOWIRE_BY_NAME和AUTOWIRE_BY_TYPE</h2><blockquote>
+<p>都是找set方法</p>
+</blockquote>
+<h2 id="2-AUTOWIRE-CONSTRUCTOR"><a href="#2-AUTOWIRE-CONSTRUCTOR" class="headerlink" title="2.AUTOWIRE_CONSTRUCTOR"></a>2.AUTOWIRE_CONSTRUCTOR</h2><blockquote>
+<p>找构造方法</p>
+</blockquote>
+<h2 id="3-AUTOWIRE"><a href="#3-AUTOWIRE" class="headerlink" title="3.@AUTOWIRE"></a>3.@AUTOWIRE</h2><blockquote>
+<p>@AUTOWIRE不是所谓的byType（byType是一种自动注入模型），和自动注入模型没有什么关系，不能混为一谈，</p>
+<p>没有给bean设置自动注入模型，默认就是手动注入，也就是@AUTOWIRE在没有设置自动注入模型的</p>
+<p>情况下其实应该算是手动注入，并不算是自动注入</p>
+</blockquote>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/08/19/spring%E7%9A%84%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%85%A5/" data-id="ckhkjpwuo0001ycvo9njvc49q" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-判断链表是否有环" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/2020/07/31/%E5%88%A4%E6%96%AD%E9%93%BE%E8%A1%A8%E6%98%AF%E5%90%A6%E6%9C%89%E7%8E%AF/" class="article-date">
+  <time datetime="2020-07-31T02:13:33.361Z" itemprop="datePublished">2020-07-31</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2020/07/31/%E5%88%A4%E6%96%AD%E9%93%BE%E8%A1%A8%E6%98%AF%E5%90%A6%E6%9C%89%E7%8E%AF/">判断链表是否有环</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Solution</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">hasCycle</span><span class="params">(ListNode head)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(head==<span class="keyword">null</span>||head.next==<span class="keyword">null</span>) <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        ListNode slow=head;</span><br><span class="line">        ListNode fast=head.next;</span><br><span class="line">        <span class="keyword">while</span>(fast!=<span class="keyword">null</span>&amp;&amp;fast.next!=<span class="keyword">null</span>)&#123;</span><br><span class="line">            <span class="keyword">if</span>(slow==fast) <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            slow=slow.next;</span><br><span class="line">            fast=fast.next.next;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/2020/07/31/%E5%88%A4%E6%96%AD%E9%93%BE%E8%A1%A8%E6%98%AF%E5%90%A6%E6%9C%89%E7%8E%AF/" data-id="ckhkjpwuq0003ycvoamtrakmj" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-删除链表节点" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/2020/07/28/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E8%8A%82%E7%82%B9/" class="article-date">
@@ -92,7 +273,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2020/07/28/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E8%8A%82%E7%82%B9/" data-id="ckd61bm200000gsvo2w4w930z" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2020/07/28/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E8%8A%82%E7%82%B9/" data-id="ckhkjpwup0002ycvoay2agjrt" class="article-share-link">Share</a>
       
       
     </footer>
@@ -143,7 +324,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2020/07/28/%E5%8F%8D%E8%BD%AC%E9%93%BE%E8%A1%A8/" data-id="ckd61bm2l0002gsvoc2f5hako" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2020/07/28/%E5%8F%8D%E8%BD%AC%E9%93%BE%E8%A1%A8/" data-id="ckhkjpwvc0005ycvo60ky8lr8" class="article-share-link">Share</a>
       
       
     </footer>
@@ -192,7 +373,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/2020/07/15/hello-world/" data-id="ckd61bm2b0001gsvob3g66jwb" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/2020/07/15/hello-world/" data-id="ckhkjpwuy0004ycvo4wk412vp" class="article-share-link">Share</a>
       
       
     </footer>
@@ -220,7 +401,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/11/">November 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/08/">August 2020</a></li><li class="archive-list-item"><a class="archive-list-link" href="/archives/2020/07/">July 2020</a></li></ul>
     </div>
   </div>
 
@@ -233,15 +414,23 @@
       <ul>
         
           <li>
+            <a href="/2020/11/15/halo-%E6%96%87%E7%AB%A0-%E6%89%80%E6%9C%89%E6%96%87%E7%AB%A0/">halo-文章-所有文章</a>
+          </li>
+        
+          <li>
+            <a href="/2020/08/19/spring%E7%9A%84%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%85%A5/">spring的自动注入</a>
+          </li>
+        
+          <li>
+            <a href="/2020/07/31/%E5%88%A4%E6%96%AD%E9%93%BE%E8%A1%A8%E6%98%AF%E5%90%A6%E6%9C%89%E7%8E%AF/">判断链表是否有环</a>
+          </li>
+        
+          <li>
             <a href="/2020/07/28/%E5%88%A0%E9%99%A4%E9%93%BE%E8%A1%A8%E8%8A%82%E7%82%B9/">删除链表节点</a>
           </li>
         
           <li>
             <a href="/2020/07/28/%E5%8F%8D%E8%BD%AC%E9%93%BE%E8%A1%A8/">反转链表</a>
-          </li>
-        
-          <li>
-            <a href="/2020/07/15/hello-world/">Hello World</a>
           </li>
         
       </ul>
